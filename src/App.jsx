@@ -364,6 +364,20 @@ export default function PageRunner() {
     reader.readAsText(file);
   };
 
+  const handleTextClick = (e) => {
+    if (isPlaying) return; // Don't allow jumping while playing
+
+    const textarea = e.target;
+    const cursorPosition = textarea.selectionStart;
+    const textBeforeCursor = text.substring(0, cursorPosition);
+    const wordsBeforeCursor = textBeforeCursor.trim().split(/\s+/).filter(w => w.length > 0);
+    const wordIndex = Math.max(0, wordsBeforeCursor.length - 1);
+
+    if (wordIndex < words.length) {
+      setCurrentIndex(wordIndex);
+    }
+  };
+
   // Get current colors based on theme
   const getColors = () => {
     if (theme === 'custom') {
@@ -606,7 +620,19 @@ export default function PageRunner() {
           font-size: 1.1rem;
           text-align: center;
         }
-        
+
+        .finished-badge {
+          position: absolute;
+          bottom: 1rem;
+          right: 1.5rem;
+          font-size: 0.875rem;
+          padding: 0.4rem 0.9rem;
+          border-radius: 20px;
+          background: var(--orp-color);
+          color: white;
+          font-weight: 500;
+        }
+
         .controls-section {
           display: flex;
           flex-direction: column;
@@ -617,6 +643,18 @@ export default function PageRunner() {
           display: flex;
           gap: 0.75rem;
           justify-content: center;
+        }
+
+        .button-row-desktop {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .button-group {
+          display: flex;
+          gap: 0.75rem;
         }
         
         .btn {
@@ -878,6 +916,12 @@ export default function PageRunner() {
           color: var(--accent);
         }
 
+        @media (min-width: 601px) {
+          .button-row {
+            display: none;
+          }
+        }
+
         @media (max-width: 600px) {
           .page-runner {
             padding: 1rem;
@@ -890,6 +934,10 @@ export default function PageRunner() {
           .word-wrapper {
             max-width: 98%;
             font-size: clamp(1.5rem, 4.5vw, 3rem);
+          }
+
+          .button-row-desktop {
+            display: none;
           }
 
           .settings-grid {
@@ -945,6 +993,7 @@ export default function PageRunner() {
                 className="text-input"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                onClick={handleTextClick}
                 placeholder={t.placeholder}
                 disabled={isPlaying}
               />
@@ -966,6 +1015,10 @@ export default function PageRunner() {
               <p className="placeholder-text">{t.instructions}</p>
             )}
           </div>
+
+          {!isPlaying && currentIndex >= words.length - 1 && words.length > 0 && (
+            <span className="finished-badge">{t.finished}</span>
+          )}
         </section>
 
         <section className="controls-section">
@@ -995,24 +1048,51 @@ export default function PageRunner() {
             </div>
           </div>
 
+          {/* Desktop button layout */}
+          <div className="button-row-desktop">
+            {!isPlaying ? (
+              <button className="btn primary" onClick={handlePlay} disabled={words.length === 0}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                {t.play}
+              </button>
+            ) : (
+              <button className="btn primary" onClick={handlePause}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+                {t.pause}
+              </button>
+            )}
+
+            <div className="button-group">
+              <button className="btn" onClick={handleReset} disabled={currentIndex === 0}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                </svg>
+                {t.reset}
+              </button>
+              <button
+                className="btn"
+                onClick={() => setShowSettings(!showSettings)}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                </svg>
+                {t.settings}
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile button layout */}
           <div className="button-row">
             {!isPlaying ? (
               <button className="btn primary" onClick={handlePlay} disabled={words.length === 0}>
-                {currentIndex >= words.length - 1 && words.length > 0 ? (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
-                    </svg>
-                    {t.finished}
-                  </>
-                ) : (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                    {t.play}
-                  </>
-                )}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                {t.play}
               </button>
             ) : (
               <button className="btn primary" onClick={handlePause}>
@@ -1031,7 +1111,7 @@ export default function PageRunner() {
           </div>
 
           <div className="settings-toggle">
-            <button 
+            <button
               className="btn"
               onClick={() => setShowSettings(!showSettings)}
             >
