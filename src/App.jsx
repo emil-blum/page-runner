@@ -31,7 +31,7 @@ const translations = {
     instructions: 'Enter text above and press Play to start speed reading',
     hideInput: 'Hide Input',
     showInput: 'Show Input',
-    loadFile: 'Load File',
+    loadFile: 'Load .txt file',
   },
   es: {
     title: 'Page Runner',
@@ -62,7 +62,7 @@ const translations = {
     instructions: 'Ingresa texto arriba y presiona Reproducir para comenzar',
     hideInput: 'Ocultar entrada',
     showInput: 'Mostrar entrada',
-    loadFile: 'Cargar archivo',
+    loadFile: 'Cargar .txt',
   },
   pt: {
     title: 'Page Runner',
@@ -93,7 +93,7 @@ const translations = {
     instructions: 'Digite o texto acima e pressione Reproduzir para começar',
     hideInput: 'Ocultar entrada',
     showInput: 'Mostrar entrada',
-    loadFile: 'Carregar arquivo',
+    loadFile: 'Carregar .txt',
   },
   lv: {
     title: 'Page Runner',
@@ -124,7 +124,7 @@ const translations = {
     instructions: 'Ievadiet tekstu augšā un nospiediet Atskaņot, lai sāktu',
     hideInput: 'Paslēpt ievadi',
     showInput: 'Rādīt ievadi',
-    loadFile: 'Ielādēt failu',
+    loadFile: 'Ielādēt .txt',
   },
   de: {
     title: 'Page Runner',
@@ -155,7 +155,7 @@ const translations = {
     instructions: 'Text oben eingeben und Play drücken zum Starten',
     hideInput: 'Eingabe ausblenden',
     showInput: 'Eingabe anzeigen',
-    loadFile: 'Datei laden',
+    loadFile: '.txt laden',
   },
   fr: {
     title: 'Page Runner',
@@ -186,7 +186,7 @@ const translations = {
     instructions: 'Entrez le texte ci-dessus et appuyez sur Lecture pour commencer',
     hideInput: 'Masquer entrée',
     showInput: 'Afficher entrée',
-    loadFile: 'Charger fichier',
+    loadFile: 'Charger .txt',
   },
 };
 
@@ -308,20 +308,14 @@ export default function PageRunner() {
     timerRef.current = setTimeout(() => {
       if (isPlayingRef.current) {
         setCurrentIndex(prev => prev + 1);
-        scheduleNextWord();
       }
     }, delay);
   }, []);
 
   // Simple effect to start/stop playback
   useEffect(() => {
-    if (isPlaying && words.length > 0) {
+    if (isPlaying && words.length > 0 && currentIndex < words.length - 1) {
       scheduleNextWord();
-    } else {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
     }
 
     return () => {
@@ -330,7 +324,7 @@ export default function PageRunner() {
         timerRef.current = null;
       }
     };
-  }, [isPlaying, scheduleNextWord, words.length]);
+  }, [isPlaying, currentIndex, scheduleNextWord, words.length]);
 
   const handlePlay = () => {
     if (words.length === 0) return;
@@ -531,8 +525,8 @@ export default function PageRunner() {
         .stats {
           display: flex;
           gap: 1.5rem;
-          margin-top: 0.75rem;
-          font-size: 0.8rem;
+          margin-top: 0.5rem;
+          font-size: 0.75rem;
           color: var(--muted);
         }
         
@@ -541,7 +535,7 @@ export default function PageRunner() {
           background: var(--display-bg);
           border: 1px solid var(--border);
           border-radius: 16px;
-          padding: 3rem 2rem;
+          padding: 3rem 1rem;
           margin-bottom: 1.5rem;
           overflow: visible;
           transition: background 0.3s ease;
@@ -608,15 +602,6 @@ export default function PageRunner() {
           color: var(--muted);
           font-size: 1.1rem;
           text-align: center;
-        }
-        
-        .wpm-display {
-          position: absolute;
-          bottom: 1rem;
-          right: 1.5rem;
-          font-size: 0.875rem;
-          color: var(--muted);
-          font-variant-numeric: tabular-nums;
         }
         
         .controls-section {
@@ -871,7 +856,25 @@ export default function PageRunner() {
           padding-top: 0.75rem;
           border-top: 1px solid var(--border);
         }
-        
+
+        .footer {
+          text-align: center;
+          margin-top: 3rem;
+          padding: 1rem;
+          font-size: 0.65rem;
+          color: var(--muted);
+          opacity: 0.7;
+        }
+
+        .footer a {
+          color: var(--muted);
+          text-decoration: none;
+        }
+
+        .footer a:hover {
+          color: var(--accent);
+        }
+
         @media (max-width: 600px) {
           .page-runner {
             padding: 1rem;
@@ -904,10 +907,6 @@ export default function PageRunner() {
 
         <section className="input-section">
           <div className="input-header">
-            <div className="stats">
-              <span>{words.length} {t.wordCount}</span>
-              {words.length > 0 && <span>~{timeEstimate} {t.timeEstimate}</span>}
-            </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <label className="input-toggle-btn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -933,13 +932,19 @@ export default function PageRunner() {
             </div>
           </div>
           {showInput && (
-            <textarea
-              className="text-input"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={t.placeholder}
-              disabled={isPlaying}
-            />
+            <>
+              <textarea
+                className="text-input"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={t.placeholder}
+                disabled={isPlaying}
+              />
+              <div className="stats">
+                <span>{words.length} {t.wordCount}</span>
+                {words.length > 0 && <span>~{timeEstimate} {t.timeEstimate}</span>}
+              </div>
+            </>
           )}
         </section>
 
@@ -953,8 +958,6 @@ export default function PageRunner() {
               <p className="placeholder-text">{t.instructions}</p>
             )}
           </div>
-          
-          <span className="wpm-display">{wpm} wpm</span>
         </section>
 
         <section className="controls-section">
@@ -1122,6 +1125,10 @@ export default function PageRunner() {
             </div>
           )}
         </section>
+
+        <footer className="footer">
+          Made by <a href="https://emilblum.com" target="_blank" rel="noopener noreferrer">Emil Blum</a> &amp; Claude AI for the love of Spritz and the work of Frank Waldman
+        </footer>
       </div>
     </div>
   );
