@@ -32,6 +32,7 @@ const translations = {
     hideInput: 'Hide Input',
     showInput: 'Show Input',
     loadFile: 'Load .txt file',
+    fullscreen: 'Fullscreen',
   },
   es: {
     title: 'Page Runner',
@@ -63,6 +64,7 @@ const translations = {
     hideInput: 'Ocultar entrada',
     showInput: 'Mostrar entrada',
     loadFile: 'Cargar .txt',
+    fullscreen: 'Pantalla completa',
   },
   pt: {
     title: 'Page Runner',
@@ -94,6 +96,7 @@ const translations = {
     hideInput: 'Ocultar entrada',
     showInput: 'Mostrar entrada',
     loadFile: 'Carregar .txt',
+    fullscreen: 'Tela cheia',
   },
   lv: {
     title: 'Page Runner',
@@ -125,6 +128,7 @@ const translations = {
     hideInput: 'Paslēpt ievadi',
     showInput: 'Rādīt ievadi',
     loadFile: 'Ielādēt .txt',
+    fullscreen: 'Pilnekrāns',
   },
   de: {
     title: 'Page Runner',
@@ -156,6 +160,7 @@ const translations = {
     hideInput: 'Eingabe ausblenden',
     showInput: 'Eingabe anzeigen',
     loadFile: '.txt laden',
+    fullscreen: 'Vollbild',
   },
   fr: {
     title: 'Page Runner',
@@ -187,6 +192,7 @@ const translations = {
     hideInput: 'Masquer entrée',
     showInput: 'Afficher entrée',
     loadFile: 'Charger .txt',
+    fullscreen: 'Plein écran',
   },
 };
 
@@ -257,6 +263,7 @@ export default function PageRunner() {
   const [language, setLanguage] = useState('en');
   const [showSettings, setShowSettings] = useState(false);
   const [showInput, setShowInput] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const timerRef = useRef(null);
   const isPlayingRef = useRef(isPlaying);
@@ -420,6 +427,251 @@ export default function PageRunner() {
       </>
     );
   };
+
+  // Render fullscreen mode
+  if (isFullscreen) {
+    return (
+      <div
+        className="fullscreen-overlay"
+        style={{
+          '--bg': colors.bg,
+          '--text': colors.text,
+          '--display-bg': colors.displayBg,
+          '--display-text': colors.displayText,
+          '--accent': colors.accent,
+          '--orp-color': orpColor,
+          '--border': colors.border,
+          '--muted': colors.muted,
+        }}
+      >
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+
+          .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--display-bg);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+          }
+
+          .fullscreen-exit {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            width: 48px;
+            height: 48px;
+            background: transparent;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.2s ease;
+          }
+
+          .fullscreen-exit:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+          }
+
+          .fullscreen-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+          }
+
+          .word-wrapper {
+            display: grid;
+            grid-template-columns: 1fr auto 3fr;
+            align-items: center;
+            width: 100%;
+            max-width: 95%;
+            font-family: 'Roboto Mono', monospace;
+            font-size: clamp(2rem, 8vw, 5rem);
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+          }
+
+          .word-before {
+            text-align: right;
+            color: var(--display-text);
+          }
+
+          .word-orp {
+            text-align: center;
+            position: relative;
+          }
+
+          .word-orp::before,
+          .word-orp::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 0.5em;
+            background: var(--orp-color);
+            opacity: 0.5;
+          }
+
+          .word-orp::before {
+            top: -0.7em;
+          }
+
+          .word-orp::after {
+            bottom: -0.7em;
+          }
+
+          .word-after {
+            text-align: left;
+            color: var(--display-text);
+          }
+
+          .fullscreen-controls {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 2rem;
+          }
+
+          .fullscreen-wpm {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+
+          .fullscreen-wpm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--muted);
+          }
+
+          .fullscreen-wpm-value {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            color: var(--orp-color);
+            font-size: 1rem;
+          }
+
+          .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border);
+            cursor: pointer;
+          }
+
+          .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--orp-color);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+          }
+
+          .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+          }
+
+          .fullscreen-button {
+            width: 100%;
+            padding: 1.25rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--orp-color);
+            color: white;
+            font-family: 'DM Sans', system-ui, sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.2s ease;
+          }
+
+          .fullscreen-button:hover {
+            filter: brightness(1.1);
+          }
+        `}</style>
+
+        <button className="fullscreen-exit" onClick={() => setIsFullscreen(false)}>
+          ✕
+        </button>
+
+        <div className="fullscreen-display">
+          {currentWord ? (
+            <div className="word-wrapper">
+              {renderWord()}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="fullscreen-controls">
+          <div className="fullscreen-wpm">
+            <div className="fullscreen-wpm-header">
+              <span>{t.wpm}</span>
+              <span className="fullscreen-wpm-value">{wpm}</span>
+            </div>
+            <input
+              type="range"
+              className="slider"
+              min="100"
+              max="1000"
+              step="25"
+              value={wpm}
+              onChange={(e) => setWpm(Number(e.target.value))}
+            />
+          </div>
+
+          {!isPlaying ? (
+            <button className="fullscreen-button" onClick={handlePlay} disabled={words.length === 0}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              {t.play}
+            </button>
+          ) : (
+            <button className="fullscreen-button" onClick={handlePause}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              </svg>
+              {t.pause}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -916,6 +1168,105 @@ export default function PageRunner() {
           color: var(--accent);
         }
 
+        .fullscreen-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: var(--display-bg);
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: 2rem;
+        }
+
+        .fullscreen-exit {
+          position: absolute;
+          top: 2rem;
+          right: 2rem;
+          width: 48px;
+          height: 48px;
+          background: transparent;
+          border: 2px solid var(--border);
+          border-radius: 50%;
+          color: var(--text);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.5rem;
+          transition: all 0.2s ease;
+        }
+
+        .fullscreen-exit:hover {
+          border-color: var(--accent);
+          color: var(--accent);
+        }
+
+        .fullscreen-display {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          max-width: 1200px;
+        }
+
+        .fullscreen-controls {
+          width: 100%;
+          max-width: 600px;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          padding: 2rem;
+        }
+
+        .fullscreen-wpm {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .fullscreen-wpm-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.9rem;
+          color: var(--muted);
+        }
+
+        .fullscreen-wpm-value {
+          font-variant-numeric: tabular-nums;
+          font-weight: 600;
+          color: var(--orp-color);
+          font-size: 1rem;
+        }
+
+        .fullscreen-button {
+          width: 100%;
+          padding: 1.25rem;
+          border: none;
+          border-radius: 12px;
+          background: var(--orp-color);
+          color: white;
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 1.1rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.75rem;
+          transition: all 0.2s ease;
+        }
+
+        .fullscreen-button:hover {
+          filter: brightness(1.1);
+        }
+
         @media (min-width: 601px) {
           .button-row {
             display: none;
@@ -1079,6 +1430,16 @@ export default function PageRunner() {
               </button>
               <button
                 className="btn"
+                onClick={() => setIsFullscreen(true)}
+                disabled={words.length === 0}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                </svg>
+                {t.fullscreen}
+              </button>
+              <button
+                className="btn"
                 onClick={() => setShowSettings(!showSettings)}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -1111,6 +1472,16 @@ export default function PageRunner() {
                 <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
               </svg>
               {t.reset}
+            </button>
+            <button
+              className="btn"
+              onClick={() => setIsFullscreen(true)}
+              disabled={words.length === 0}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+              </svg>
+              {t.fullscreen}
             </button>
             <button
               className="btn"
