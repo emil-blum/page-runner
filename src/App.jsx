@@ -543,7 +543,7 @@ export default function PageRunner() {
           border-radius: 16px;
           padding: 3rem 2rem;
           margin-bottom: 1.5rem;
-          overflow: hidden;
+          overflow: visible;
           transition: background 0.3s ease;
         }
         
@@ -561,8 +561,9 @@ export default function PageRunner() {
           grid-template-columns: 1fr auto 3fr;
           align-items: center;
           width: 100%;
+          max-width: 90%;
           font-family: 'Roboto Mono', monospace;
-          font-size: clamp(2.5rem, 8vw, 5rem);
+          font-size: clamp(2rem, 6vw, 3.5rem);
           font-weight: 400;
           letter-spacing: 0.02em;
           white-space: nowrap;
@@ -584,18 +585,18 @@ export default function PageRunner() {
           position: absolute;
           left: 50%;
           transform: translateX(-50%);
-          width: 2px;
-          height: 0.6em;
-          background: var(--border);
-          opacity: 0.6;
+          width: 3px;
+          height: 0.5em;
+          background: var(--accent);
+          opacity: 0.5;
         }
 
         .word-orp::before {
-          top: -0.8em;
+          top: -0.7em;
         }
 
         .word-orp::after {
-          bottom: -0.8em;
+          bottom: -0.7em;
         }
         
         .word-after {
@@ -616,22 +617,6 @@ export default function PageRunner() {
           font-size: 0.875rem;
           color: var(--muted);
           font-variant-numeric: tabular-nums;
-        }
-        
-        .status-badge {
-          position: absolute;
-          top: 1rem;
-          left: 1.5rem;
-          font-size: 0.75rem;
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          background: var(--border);
-          color: var(--muted);
-        }
-        
-        .status-badge.playing {
-          background: var(--accent);
-          color: white;
         }
         
         .controls-section {
@@ -959,10 +944,6 @@ export default function PageRunner() {
         </section>
 
         <section className="display-section">
-          <span className={`status-badge ${isPlaying ? 'playing' : ''}`}>
-            {words.length === 0 ? t.ready : isPlaying ? t.reading : currentIndex >= words.length - 1 && words.length > 0 ? t.finished : t.ready}
-          </span>
-          
           <div className="word-display">
             {currentWord ? (
               <div className="word-wrapper">
@@ -1006,10 +987,21 @@ export default function PageRunner() {
           <div className="button-row">
             {!isPlaying ? (
               <button className="btn primary" onClick={handlePlay} disabled={words.length === 0}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-                {t.play}
+                {currentIndex >= words.length - 1 && words.length > 0 ? (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                    </svg>
+                    {t.finished}
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    {t.play}
+                  </>
+                )}
               </button>
             ) : (
               <button className="btn primary" onClick={handlePause}>
