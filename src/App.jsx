@@ -547,16 +547,6 @@ export default function PageRunner() {
           transition: background 0.3s ease;
         }
         
-        .focus-guide {
-          position: absolute;
-          left: 25%;
-          top: 0;
-          bottom: 0;
-          width: 2px;
-          background: var(--border);
-          opacity: 0.5;
-        }
-        
         .word-display {
           display: flex;
           justify-content: center;
@@ -585,6 +575,27 @@ export default function PageRunner() {
         
         .word-orp {
           text-align: center;
+          position: relative;
+        }
+
+        .word-orp::before,
+        .word-orp::after {
+          content: '';
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 2px;
+          height: 0.6em;
+          background: var(--border);
+          opacity: 0.6;
+        }
+
+        .word-orp::before {
+          top: -0.8em;
+        }
+
+        .word-orp::after {
+          bottom: -0.8em;
         }
         
         .word-after {
@@ -948,8 +959,6 @@ export default function PageRunner() {
         </section>
 
         <section className="display-section">
-          <div className="focus-guide" />
-          
           <span className={`status-badge ${isPlaying ? 'playing' : ''}`}>
             {words.length === 0 ? t.ready : isPlaying ? t.reading : currentIndex >= words.length - 1 && words.length > 0 ? t.finished : t.ready}
           </span>
