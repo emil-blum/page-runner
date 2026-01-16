@@ -568,12 +568,14 @@ export default function PageRunner() {
             justify-content: space-between;
             align-items: center;
             font-size: 0.9rem;
+            font-family: 'DM Sans', system-ui, sans-serif;
             color: var(--muted);
           }
 
           .fullscreen-wpm-value {
             font-variant-numeric: tabular-nums;
             font-weight: 600;
+            font-family: 'DM Sans', system-ui, sans-serif;
             color: var(--orp-color);
             font-size: 1rem;
           }
@@ -1289,6 +1291,7 @@ export default function PageRunner() {
           .word-wrapper {
             max-width: 98%;
             font-size: clamp(1.5rem, 4.5vw, 3rem);
+            margin-left: 5%;
           }
 
           .button-row-desktop {
