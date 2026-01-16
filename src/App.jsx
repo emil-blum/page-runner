@@ -377,6 +377,8 @@ export default function PageRunner() {
   };
 
   const colors = getColors();
+  // ORP color is always red for light/dark themes, custom in custom theme
+  const orpColor = theme === 'custom' ? focusColor : '#e63946';
   const currentWord = words[currentIndex] || '';
   const orpIndex = calculateORP(currentWord);
   const progress = words.length > 0 ? ((currentIndex + 1) / words.length) * 100 : 0;
@@ -394,9 +396,9 @@ export default function PageRunner() {
     return (
       <>
         <span className="word-before">{before}</span>
-        <span 
+        <span
           className="word-orp"
-          style={{ color: showORP ? focusColor : colors.displayText }}
+          style={{ color: showORP ? orpColor : colors.displayText }}
         >
           {orp}
         </span>
@@ -406,14 +408,15 @@ export default function PageRunner() {
   };
 
   return (
-    <div 
+    <div
       className="page-runner"
-      style={{ 
+      style={{
         '--bg': colors.bg,
         '--text': colors.text,
         '--display-bg': colors.displayBg,
         '--display-text': colors.displayText,
-        '--accent': focusColor,
+        '--accent': colors.accent,
+        '--orp-color': orpColor,
         '--border': colors.border,
         '--muted': colors.muted,
       }}
@@ -555,9 +558,9 @@ export default function PageRunner() {
           grid-template-columns: 1fr auto 3fr;
           align-items: center;
           width: 100%;
-          max-width: 90%;
+          max-width: 95%;
           font-family: 'Roboto Mono', monospace;
-          font-size: clamp(2rem, 6vw, 3.5rem);
+          font-size: clamp(1.75rem, 5vw, 3.5rem);
           font-weight: 400;
           letter-spacing: 0.02em;
           white-space: nowrap;
@@ -581,7 +584,7 @@ export default function PageRunner() {
           transform: translateX(-50%);
           width: 3px;
           height: 0.5em;
-          background: var(--accent);
+          background: var(--orp-color);
           opacity: 0.5;
         }
 
@@ -879,19 +882,24 @@ export default function PageRunner() {
           .page-runner {
             padding: 1rem;
           }
-          
+
           .display-section {
-            padding: 2rem 1rem;
+            padding: 2rem 0.5rem;
           }
-          
+
+          .word-wrapper {
+            max-width: 98%;
+            font-size: clamp(1.5rem, 4.5vw, 3rem);
+          }
+
           .settings-grid {
             grid-template-columns: 1fr;
           }
-          
+
           .button-row {
             flex-wrap: wrap;
           }
-          
+
           .btn {
             flex: 1;
             min-width: 100px;
@@ -1088,12 +1096,12 @@ export default function PageRunner() {
                   <span className="setting-label">{t.focusPoint}</span>
                   <div className="toggle-row">
                     <span className="toggle-label">{t.enableORP}</span>
-                    <div 
+                    <div
                       className={`toggle ${showORP ? 'active' : ''}`}
                       onClick={() => setShowORP(!showORP)}
                     />
                   </div>
-                  {showORP && (
+                  {showORP && theme === 'custom' && (
                     <div className="color-input-row">
                       <input
                         type="color"
