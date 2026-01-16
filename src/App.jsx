@@ -29,6 +29,9 @@ const translations = {
     reading: 'Reading...',
     finished: 'Finished!',
     instructions: 'Enter text above and press Play to start speed reading',
+    hideInput: 'Hide Input',
+    showInput: 'Show Input',
+    loadFile: 'Load File',
   },
   es: {
     title: 'Page Runner',
@@ -57,6 +60,9 @@ const translations = {
     reading: 'Leyendo...',
     finished: '¡Terminado!',
     instructions: 'Ingresa texto arriba y presiona Reproducir para comenzar',
+    hideInput: 'Ocultar entrada',
+    showInput: 'Mostrar entrada',
+    loadFile: 'Cargar archivo',
   },
   pt: {
     title: 'Page Runner',
@@ -85,6 +91,9 @@ const translations = {
     reading: 'Lendo...',
     finished: 'Terminado!',
     instructions: 'Digite o texto acima e pressione Reproduzir para começar',
+    hideInput: 'Ocultar entrada',
+    showInput: 'Mostrar entrada',
+    loadFile: 'Carregar arquivo',
   },
   lv: {
     title: 'Page Runner',
@@ -113,6 +122,9 @@ const translations = {
     reading: 'Lasu...',
     finished: 'Pabeigts!',
     instructions: 'Ievadiet tekstu augšā un nospiediet Atskaņot, lai sāktu',
+    hideInput: 'Paslēpt ievadi',
+    showInput: 'Rādīt ievadi',
+    loadFile: 'Ielādēt failu',
   },
   de: {
     title: 'Page Runner',
@@ -141,6 +153,9 @@ const translations = {
     reading: 'Lese...',
     finished: 'Fertig!',
     instructions: 'Text oben eingeben und Play drücken zum Starten',
+    hideInput: 'Eingabe ausblenden',
+    showInput: 'Eingabe anzeigen',
+    loadFile: 'Datei laden',
   },
   fr: {
     title: 'Page Runner',
@@ -169,6 +184,9 @@ const translations = {
     reading: 'Lecture en cours...',
     finished: 'Terminé !',
     instructions: 'Entrez le texte ci-dessus et appuyez sur Lecture pour commencer',
+    hideInput: 'Masquer entrée',
+    showInput: 'Afficher entrée',
+    loadFile: 'Charger fichier',
   },
 };
 
@@ -238,9 +256,32 @@ export default function PageRunner() {
   });
   const [language, setLanguage] = useState('en');
   const [showSettings, setShowSettings] = useState(false);
-  
+  const [showInput, setShowInput] = useState(true);
+
   const timerRef = useRef(null);
+  const isPlayingRef = useRef(isPlaying);
+  const currentIndexRef = useRef(currentIndex);
+  const wordsRef = useRef(words);
+  const wpmRef = useRef(wpm);
+
   const t = translations[language];
+
+  // Keep refs in sync
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
+
+  useEffect(() => {
+    wordsRef.current = words;
+  }, [words]);
+
+  useEffect(() => {
+    wpmRef.current = wpm;
+  }, [wpm]);
 
   // Parse text into words
   useEffect(() => {
@@ -249,30 +290,47 @@ export default function PageRunner() {
     setCurrentIndex(0);
   }, [text]);
 
-  // Handle playback
+  // Stable playback function using refs
   const scheduleNextWord = useCallback(() => {
-    if (currentIndex >= words.length - 1) {
+    const currentIdx = currentIndexRef.current;
+    const currentWords = wordsRef.current;
+    const currentWpm = wpmRef.current;
+
+    if (currentIdx >= currentWords.length - 1) {
       setIsPlaying(false);
       return;
     }
 
-    const currentWord = words[currentIndex];
-    const baseDelay = 60000 / wpm;
+    const currentWord = currentWords[currentIdx];
+    const baseDelay = 60000 / currentWpm;
     const delay = baseDelay * getDelayMultiplier(currentWord);
 
     timerRef.current = setTimeout(() => {
-      setCurrentIndex(prev => prev + 1);
+      if (isPlayingRef.current) {
+        setCurrentIndex(prev => prev + 1);
+        scheduleNextWord();
+      }
     }, delay);
-  }, [currentIndex, words, wpm]);
+  }, []);
 
+  // Simple effect to start/stop playback
   useEffect(() => {
     if (isPlaying && words.length > 0) {
       scheduleNextWord();
+    } else {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
     }
+
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [isPlaying, currentIndex, scheduleNextWord, words.length]);
+  }, [isPlaying, scheduleNextWord, words.length]);
 
   const handlePlay = () => {
     if (words.length === 0) return;
@@ -289,6 +347,27 @@ export default function PageRunner() {
   const handleReset = () => {
     setIsPlaying(false);
     setCurrentIndex(0);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Only accept .txt files
+    if (!file.name.endsWith('.txt')) {
+      alert('Please upload a .txt file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      if (typeof content === 'string') {
+        setText(content);
+        setShowInput(true); // Show input so user can see the loaded text
+      }
+    };
+    reader.readAsText(file);
   };
 
   // Get current colors based on theme
@@ -390,7 +469,41 @@ export default function PageRunner() {
         .input-section {
           margin-bottom: 1.5rem;
         }
-        
+
+        .input-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.75rem;
+        }
+
+        .input-toggle-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 0.75rem;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          background: transparent;
+          color: var(--text);
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 0.8rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .input-toggle-btn:hover {
+          border-color: var(--accent);
+        }
+
+        .input-toggle-btn svg {
+          transition: transform 0.2s ease;
+        }
+
+        .input-toggle-btn.collapsed svg {
+          transform: rotate(180deg);
+        }
+
         .text-input {
           width: 100%;
           min-height: 120px;
@@ -442,28 +555,6 @@ export default function PageRunner() {
           width: 2px;
           background: var(--border);
           opacity: 0.5;
-        }
-        
-        .focus-guide::before,
-        .focus-guide::after {
-          content: '';
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 8px;
-          height: 8px;
-          border-left: 2px solid var(--border);
-          border-top: 2px solid var(--border);
-        }
-        
-        .focus-guide::before {
-          top: 1rem;
-          transform: translateX(-50%) rotate(45deg);
-        }
-        
-        .focus-guide::after {
-          bottom: 1rem;
-          transform: translateX(-50%) rotate(-135deg);
         }
         
         .word-display {
@@ -817,17 +908,44 @@ export default function PageRunner() {
         </header>
 
         <section className="input-section">
-          <textarea
-            className="text-input"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t.placeholder}
-            disabled={isPlaying}
-          />
-          <div className="stats">
-            <span>{words.length} {t.wordCount}</span>
-            {words.length > 0 && <span>~{timeEstimate} {t.timeEstimate}</span>}
+          <div className="input-header">
+            <div className="stats">
+              <span>{words.length} {t.wordCount}</span>
+              {words.length > 0 && <span>~{timeEstimate} {t.timeEstimate}</span>}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <label className="input-toggle-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+                {t.loadFile}
+                <input
+                  type="file"
+                  accept=".txt"
+                  onChange={handleFileUpload}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <button
+                className={`input-toggle-btn ${!showInput ? 'collapsed' : ''}`}
+                onClick={() => setShowInput(!showInput)}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                </svg>
+                {showInput ? t.hideInput : t.showInput}
+              </button>
+            </div>
           </div>
+          {showInput && (
+            <textarea
+              className="text-input"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={t.placeholder}
+              disabled={isPlaying}
+            />
+          )}
         </section>
 
         <section className="display-section">
