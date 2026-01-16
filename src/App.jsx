@@ -425,7 +425,7 @@ export default function PageRunner() {
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
         
         * {
           box-sizing: border-box;
@@ -549,7 +549,7 @@ export default function PageRunner() {
         
         .focus-guide {
           position: absolute;
-          left: 50%;
+          left: 25%;
           top: 0;
           bottom: 0;
           width: 2px;
@@ -568,10 +568,10 @@ export default function PageRunner() {
         
         .word-wrapper {
           display: grid;
-          grid-template-columns: 1fr auto 1fr;
+          grid-template-columns: 1fr auto 3fr;
           align-items: center;
           width: 100%;
-          font-family: 'Crimson Pro', Georgia, serif;
+          font-family: 'Roboto Mono', monospace;
           font-size: clamp(2.5rem, 8vw, 5rem);
           font-weight: 400;
           letter-spacing: 0.02em;
@@ -585,7 +585,6 @@ export default function PageRunner() {
         
         .word-orp {
           text-align: center;
-          font-weight: 600;
         }
         
         .word-after {
