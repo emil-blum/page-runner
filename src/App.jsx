@@ -296,11 +296,6 @@ export default function PageRunner() {
     const currentWords = wordsRef.current;
     const currentWpm = wpmRef.current;
 
-    if (currentIdx >= currentWords.length - 1) {
-      setIsPlaying(false);
-      return;
-    }
-
     const currentWord = currentWords[currentIdx];
     const baseDelay = 60000 / currentWpm;
     const delay = baseDelay * getDelayMultiplier(currentWord);
@@ -314,8 +309,13 @@ export default function PageRunner() {
 
   // Simple effect to start/stop playback
   useEffect(() => {
-    if (isPlaying && words.length > 0 && currentIndex < words.length - 1) {
-      scheduleNextWord();
+    if (isPlaying && words.length > 0) {
+      if (currentIndex >= words.length - 1) {
+        // Reached the end, stop playing
+        setIsPlaying(false);
+      } else {
+        scheduleNextWord();
+      }
     }
 
     return () => {
@@ -920,6 +920,10 @@ export default function PageRunner() {
           .button-row {
             display: none;
           }
+
+          .settings-toggle {
+            display: none;
+          }
         }
 
         @media (max-width: 600px) {
@@ -1108,9 +1112,6 @@ export default function PageRunner() {
               </svg>
               {t.reset}
             </button>
-          </div>
-
-          <div className="settings-toggle">
             <button
               className="btn"
               onClick={() => setShowSettings(!showSettings)}
