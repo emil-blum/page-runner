@@ -16,7 +16,7 @@ const translations = {
     theme: 'Theme',
     light: 'Light',
     dark: 'Dark',
-    custom: 'Custom',
+    accessible: 'Accessible',
     focusPoint: 'Focus Point',
     enableORP: 'Highlight focus letter',
     focusColor: 'Focus color',
@@ -31,7 +31,7 @@ const translations = {
     instructions: 'Enter text above and press Play to start speed reading',
     hideInput: 'Hide Input',
     showInput: 'Show Input',
-    loadFile: 'Load .txt file',
+    loadFile: 'Load text',
     fullscreen: 'Fullscreen',
   },
   es: {
@@ -48,7 +48,7 @@ const translations = {
     theme: 'Tema',
     light: 'Claro',
     dark: 'Oscuro',
-    custom: 'Personalizado',
+    accessible: 'Accesible',
     focusPoint: 'Punto de enfoque',
     enableORP: 'Resaltar letra de enfoque',
     focusColor: 'Color de enfoque',
@@ -63,7 +63,7 @@ const translations = {
     instructions: 'Ingresa texto arriba y presiona Reproducir para comenzar',
     hideInput: 'Ocultar entrada',
     showInput: 'Mostrar entrada',
-    loadFile: 'Cargar .txt',
+    loadFile: 'Cargar texto',
     fullscreen: 'Pantalla completa',
   },
   pt: {
@@ -80,7 +80,7 @@ const translations = {
     theme: 'Tema',
     light: 'Claro',
     dark: 'Escuro',
-    custom: 'Personalizado',
+    accessible: 'Acessível',
     focusPoint: 'Ponto de foco',
     enableORP: 'Destacar letra de foco',
     focusColor: 'Cor do foco',
@@ -95,7 +95,7 @@ const translations = {
     instructions: 'Digite o texto acima e pressione Reproduzir para começar',
     hideInput: 'Ocultar entrada',
     showInput: 'Mostrar entrada',
-    loadFile: 'Carregar .txt',
+    loadFile: 'Carregar texto',
     fullscreen: 'Tela cheia',
   },
   lv: {
@@ -112,7 +112,7 @@ const translations = {
     theme: 'Tēma',
     light: 'Gaišs',
     dark: 'Tumšs',
-    custom: 'Pielāgots',
+    accessible: 'Pieejams',
     focusPoint: 'Fokusa punkts',
     enableORP: 'Izcelt fokusa burtu',
     focusColor: 'Fokusa krāsa',
@@ -127,7 +127,7 @@ const translations = {
     instructions: 'Ievadiet tekstu augšā un nospiediet Atskaņot, lai sāktu',
     hideInput: 'Paslēpt ievadi',
     showInput: 'Rādīt ievadi',
-    loadFile: 'Ielādēt .txt',
+    loadFile: 'Ielādēt tekstu',
     fullscreen: 'Pilnekrāns',
   },
   de: {
@@ -144,7 +144,7 @@ const translations = {
     theme: 'Thema',
     light: 'Hell',
     dark: 'Dunkel',
-    custom: 'Benutzerdefiniert',
+    accessible: 'Barrierefrei',
     focusPoint: 'Fokuspunkt',
     enableORP: 'Fokusbuchstabe hervorheben',
     focusColor: 'Fokusfarbe',
@@ -159,7 +159,7 @@ const translations = {
     instructions: 'Text oben eingeben und Play drücken zum Starten',
     hideInput: 'Eingabe ausblenden',
     showInput: 'Eingabe anzeigen',
-    loadFile: '.txt laden',
+    loadFile: 'Text laden',
     fullscreen: 'Vollbild',
   },
   fr: {
@@ -176,7 +176,7 @@ const translations = {
     theme: 'Thème',
     light: 'Clair',
     dark: 'Sombre',
-    custom: 'Personnalisé',
+    accessible: 'Accessible',
     focusPoint: 'Point de focus',
     enableORP: 'Surligner la lettre de focus',
     focusColor: 'Couleur du focus',
@@ -191,10 +191,26 @@ const translations = {
     instructions: 'Entrez le texte ci-dessus et appuyez sur Lecture pour commencer',
     hideInput: 'Masquer entrée',
     showInput: 'Afficher entrée',
-    loadFile: 'Charger .txt',
+    loadFile: 'Charger texte',
     fullscreen: 'Plein écran',
   },
 };
+
+const stripMarkdown = (text) => text
+  .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')         // images → remove
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')         // links → keep text
+  .replace(/`{3}[\s\S]*?`{3}/gm, '')               // fenced code blocks
+  .replace(/`([^`]+)`/g, '$1')                     // inline code
+  .replace(/^#{1,6}\s+/gm, '')                     // headings
+  .replace(/\*\*(.+?)\*\*/g, '$1')                 // bold
+  .replace(/\*(.+?)\*/g, '$1')                     // italic
+  .replace(/~~(.+?)~~/g, '$1')                     // strikethrough
+  .replace(/^\s*[-*+]\s+/gm, '')                   // unordered lists
+  .replace(/^\s*\d+\.\s+/gm, '')                   // ordered lists
+  .replace(/^\s*>\s*/gm, '')                        // blockquotes
+  .replace(/^[-*_]{3,}$/gm, '')                    // horizontal rules
+  .replace(/\n{3,}/g, '\n\n')                      // collapse excess newlines
+  .trim();
 
 // Calculate the Optimal Recognition Point (ORP) for a word
 // The ORP letter must always appear at the exact center line
@@ -213,37 +229,34 @@ const calculateORP = (word) => {
   return Math.floor(len * 0.3); // Longer words: ~30% in
 };
 
-// Calculate delay multiplier for punctuation and long words
-const getDelayMultiplier = (word) => {
-  let multiplier = 1;
-  // Add pause for punctuation
-  if (/[.!?]$/.test(word)) multiplier = 2.5;
-  else if (/[,;:]$/.test(word)) multiplier = 1.5;
-  else if (/[-–—]$/.test(word)) multiplier = 1.3;
-  // Add slight pause for longer words
-  if (word.length > 10) multiplier *= 1.2;
-  return multiplier;
-};
-
 // Theme presets
 const themes = {
   light: {
     bg: '#f5f3ef',
     text: '#1a1a1a',
-    displayBg: '#ffffff',
-    displayText: '#0d0d0d',
+    displayBg: '#fdfbf7',
+    displayText: '#1a1a1a',
     accent: '#e63946',
     border: '#d4d0c8',
     muted: '#6b6b6b',
   },
   dark: {
-    bg: '#0d0d0d',
-    text: '#e8e6e3',
-    displayBg: '#1a1a1a',
-    displayText: '#ffffff',
+    bg: '#121212',
+    text: '#e0e0e0',
+    displayBg: '#1c1c1c',
+    displayText: '#e0e0e0',
     accent: '#e63946',
     border: '#2a2a2a',
     muted: '#888888',
+  },
+  accessible: {
+    bg: '#fffde7',
+    text: '#1a1a1a',
+    displayBg: '#fffde7',
+    displayText: '#1a1a1a',
+    accent: '#0055cc',
+    border: '#d4c880',
+    muted: '#5a5a5a',
   },
 };
 
@@ -253,13 +266,8 @@ export default function PageRunner() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [wpm, setWpm] = useState(300);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [showORP, setShowORP] = useState(true);
-  const [focusColor, setFocusColor] = useState('#e63946');
-  const [customColors, setCustomColors] = useState({
-    bg: '#1a1a1a',
-    text: '#ffffff',
-  });
   const [language, setLanguage] = useState('en');
   const [showSettings, setShowSettings] = useState(false);
   const [showInput, setShowInput] = useState(true);
@@ -303,15 +311,13 @@ export default function PageRunner() {
     const currentWords = wordsRef.current;
     const currentWpm = wpmRef.current;
 
-    const currentWord = currentWords[currentIdx];
     const baseDelay = 60000 / currentWpm;
-    const delay = baseDelay * getDelayMultiplier(currentWord);
 
     timerRef.current = setTimeout(() => {
       if (isPlayingRef.current) {
         setCurrentIndex(prev => prev + 1);
       }
-    }, delay);
+    }, baseDelay);
   }, []);
 
   // Simple effect to start/stop playback
@@ -350,25 +356,31 @@ export default function PageRunner() {
     setCurrentIndex(0);
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Only accept .txt files
-    if (!file.name.endsWith('.txt')) {
-      alert('Please upload a .txt file');
-      return;
-    }
+    const ext = file.name.split('.').pop().toLowerCase();
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      if (typeof content === 'string') {
-        setText(content);
-        setShowInput(true); // Show input so user can see the loaded text
-      }
-    };
-    reader.readAsText(file);
+    if (ext === 'txt' || ext === 'md') {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result;
+        if (typeof content === 'string') {
+          setText(ext === 'md' ? stripMarkdown(content) : content);
+          setShowInput(true);
+        }
+      };
+      reader.readAsText(file);
+    } else if (ext === 'docx') {
+      const { default: mammoth } = await import('mammoth');
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      setText(result.value.trim());
+      setShowInput(true);
+    } else {
+      alert('Please upload a .txt, .md, or .docx file');
+    }
   };
 
   const handleTextClick = (e) => {
@@ -385,21 +397,8 @@ export default function PageRunner() {
     }
   };
 
-  // Get current colors based on theme
-  const getColors = () => {
-    if (theme === 'custom') {
-      return {
-        ...themes.dark,
-        displayBg: customColors.bg,
-        displayText: customColors.text,
-      };
-    }
-    return themes[theme];
-  };
-
-  const colors = getColors();
-  // ORP color is always red for light/dark themes, custom in custom theme
-  const orpColor = theme === 'custom' ? focusColor : '#e63946';
+  const colors = themes[theme] || themes.light;
+  const orpColor = theme === 'accessible' ? '#0055cc' : '#e63946';
   const currentWord = words[currentIndex] || '';
   const orpIndex = calculateORP(currentWord);
   const progress = words.length > 0 ? ((currentIndex + 1) / words.length) * 100 : 0;
@@ -765,6 +764,13 @@ export default function PageRunner() {
           transition: transform 0.2s ease;
         }
 
+        .load-file-hint {
+          font-size: 0.65rem;
+          opacity: 0.5;
+          margin-left: 0.15rem;
+          font-weight: 400;
+        }
+
         .input-toggle-btn.collapsed svg {
           transform: rotate(180deg);
         }
@@ -795,7 +801,7 @@ export default function PageRunner() {
         
         .stats {
           display: flex;
-          gap: 1.5rem;
+          gap: 1rem;
           margin-top: 0.5rem;
           font-size: 0.75rem;
           color: var(--muted);
@@ -871,7 +877,7 @@ export default function PageRunner() {
         
         .placeholder-text {
           color: var(--muted);
-          font-size: 1.1rem;
+          font-size: 1rem;
           text-align: center;
         }
 
@@ -879,8 +885,8 @@ export default function PageRunner() {
           position: absolute;
           bottom: 1rem;
           right: 1.5rem;
-          font-size: 0.875rem;
-          padding: 0.4rem 0.9rem;
+          font-size: 0.75rem;
+          padding: 0.375rem 0.75rem;
           border-radius: 20px;
           background: var(--orp-color);
           color: white;
@@ -890,7 +896,7 @@ export default function PageRunner() {
         .controls-section {
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: 1.5rem;
         }
         
         .button-row {
@@ -916,33 +922,35 @@ export default function PageRunner() {
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
-          padding: 0.875rem 1.75rem;
+          padding: 0.75rem 1.25rem;
           border: 1px solid var(--border);
           border-radius: 8px;
           background: var(--display-bg);
           color: var(--text);
           font-family: 'DM Sans', system-ui, sans-serif;
-          font-size: 0.9rem;
+          font-size: 0.875rem;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
         }
-        
+
         .btn:hover {
           border-color: var(--accent);
         }
-        
+
         .btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
-        
+
         .btn.primary {
           background: var(--accent);
           border-color: var(--accent);
           color: white;
+          font-size: 1rem;
+          padding: 0.875rem 2rem;
         }
-        
+
         .btn.primary:hover {
           filter: brightness(1.1);
         }
@@ -1010,8 +1018,8 @@ export default function PageRunner() {
         }
         
         .settings-panel {
-          margin-top: 1.5rem;
-          padding: 1.5rem;
+          margin-top: 1rem;
+          padding: 1.25rem;
           background: var(--display-bg);
           border: 1px solid var(--border);
           border-radius: 12px;
@@ -1069,7 +1077,7 @@ export default function PageRunner() {
         }
         
         .toggle-label {
-          font-size: 0.9rem;
+          font-size: 0.875rem;
         }
         
         .toggle {
@@ -1139,19 +1147,10 @@ export default function PageRunner() {
           background: var(--display-bg);
           color: var(--text);
           font-family: 'DM Sans', system-ui, sans-serif;
-          font-size: 0.9rem;
+          font-size: 0.875rem;
           cursor: pointer;
         }
         
-        .custom-colors {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-          margin-top: 0.5rem;
-          padding-top: 0.75rem;
-          border-top: 1px solid var(--border);
-        }
-
         .footer {
           text-align: center;
           margin-top: 3rem;
@@ -1327,9 +1326,10 @@ export default function PageRunner() {
                   <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                 </svg>
                 {t.loadFile}
+                <span className="load-file-hint">.txt · .md · .docx</span>
                 <input
                   type="file"
-                  accept=".txt"
+                  accept=".txt,.md,.docx"
                   onChange={handleFileUpload}
                   style={{ display: 'none' }}
                 />
@@ -1503,48 +1503,25 @@ export default function PageRunner() {
                 <div className="setting-group">
                   <span className="setting-label">{t.theme}</span>
                   <div className="theme-buttons">
-                    <button 
+                    <button
                       className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
                       onClick={() => setTheme('light')}
                     >
                       {t.light}
                     </button>
-                    <button 
+                    <button
                       className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
                       onClick={() => setTheme('dark')}
                     >
                       {t.dark}
                     </button>
-                    <button 
-                      className={`theme-btn ${theme === 'custom' ? 'active' : ''}`}
-                      onClick={() => setTheme('custom')}
+                    <button
+                      className={`theme-btn ${theme === 'accessible' ? 'active' : ''}`}
+                      onClick={() => setTheme('accessible')}
                     >
-                      {t.custom}
+                      {t.accessible}
                     </button>
                   </div>
-                  
-                  {theme === 'custom' && (
-                    <div className="custom-colors">
-                      <div className="color-input-row">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={customColors.bg}
-                          onChange={(e) => setCustomColors(prev => ({ ...prev, bg: e.target.value }))}
-                        />
-                        <span className="toggle-label">{t.bgColor}</span>
-                      </div>
-                      <div className="color-input-row">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={customColors.text}
-                          onChange={(e) => setCustomColors(prev => ({ ...prev, text: e.target.value }))}
-                        />
-                        <span className="toggle-label">{t.textColor}</span>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="setting-group">
@@ -1556,17 +1533,6 @@ export default function PageRunner() {
                       onClick={() => setShowORP(!showORP)}
                     />
                   </div>
-                  {showORP && theme === 'custom' && (
-                    <div className="color-input-row">
-                      <input
-                        type="color"
-                        className="color-picker"
-                        value={focusColor}
-                        onChange={(e) => setFocusColor(e.target.value)}
-                      />
-                      <span className="toggle-label">{t.focusColor}</span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="setting-group">
